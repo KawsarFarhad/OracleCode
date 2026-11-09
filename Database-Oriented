@@ -1,0 +1,29 @@
+SELECT 'ALTER TABLE ' || owner || '.' || table_name || ' MOVE TABLESPACE TTREVP;'
+FROM dba_tables
+WHERE owner = 'TTREV';
+
+BEGIN
+   FOR t IN (SELECT table_name FROM dba_tables WHERE owner = 'TTREV') LOOP
+      BEGIN
+         EXECUTE IMMEDIATE 'ALTER TABLE TTREV.' || t.table_name || ' MOVE TABLESPACE TTREVP';
+         DBMS_OUTPUT.PUT_LINE('Moved table: ' || t.table_name);
+      EXCEPTION
+         WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error moving table ' || t.table_name || ': ' || SQLERRM);
+      END;
+   END LOOP;
+END;
+/
+
+BEGIN
+   FOR i IN (SELECT index_name FROM dba_indexes WHERE owner = 'TTREV' AND index_type != 'LOB') LOOP
+      BEGIN
+         EXECUTE IMMEDIATE 'ALTER INDEX TTREV.' || i.index_name || ' REBUILD TABLESPACE TTREVP';
+         DBMS_OUTPUT.PUT_LINE('Rebuilt index: ' || i.index_name);
+      EXCEPTION
+         WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error rebuilding index ' || i.index_name || ': ' || SQLERRM);
+      END;
+   END LOOP;
+END;
+/
